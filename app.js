@@ -5,10 +5,10 @@
 
 var express = require('express')
   , routes = require('./routes')
-  , user = require('./routes/user')
-  , upload = require('./upload')
+  , figuro = require('./figuro')
   , http = require('http')
-  , path = require('path');
+  , path = require('path')
+  , fs = require('fs');
 
 var app = express();
 
@@ -30,8 +30,10 @@ app.configure('development', function(){
 });
 
 app.get('/', routes.index);
-app.post('/upload', upload.uploadImage);
+app.get('/:identifier', figuro.getUploadedImage);
+app.post('/upload', figuro.uploadImage);
 
 http.createServer(app).listen(app.get('port'), function(){
+  figuro.initialize();
   console.log("Express server listening on port " + app.get('port'));
 });
