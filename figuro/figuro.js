@@ -6,19 +6,23 @@
  * To change this template use File | Settings | File Templates.
  */
 var figuro = figuro || {};
+
+// Node Modules
 var _ = require('underscore')
   , fs = require('fs')
-  , crypto = require('crypto')
-  , mongolian = require('mongolian');
+  , mongolian = require('mongolian')
+  , request = require('request');
 
+// mongodb server objects
 var server = new mongolian,
   db = server.db('figuro');
 
+// mongodb collection objects
 var images = db.collection('images'),
   statuses = db.collection('status');
 
 _.extend(figuro, {
-  "host": "http://localhost:3000",
+  "host": "http://depot.so",
   "staticPath": "./static/",
   "imgDirName": "img"
 });
@@ -45,7 +49,7 @@ figuro.initialize = function() {
 
 figuro.getUploadedImage = function(req, res) {
   images.findOne({'identifier': req.params.identifier}, function(db_err, status) {
-    if(!db_err && !status) {
+    if(!db_err && !!status) {
       fs.readFile(String.format('{0}/{1}/{2}', figuro.staticPath, figuro.imgDirName, generateIdentifier(status)), function (fs_err, data) {
         if (!fs_err) {
           res.set('Content-Type', status.filetype);
@@ -58,6 +62,14 @@ figuro.getUploadedImage = function(req, res) {
 };
 
 figuro.uploadImage = function (req, res) {
+
+  console.log(req.headers);
+
+  if(!req.body || !req.files.media) {
+    res.send(400, 'Parameter missing');
+    return;
+  }
+
   var temp_path = req.files.media.path;
   var imageItem = {
     'extension': req.files.media.name.split('.')[1],
@@ -67,6 +79,29 @@ figuro.uploadImage = function (req, res) {
   };
 
   var calls = {
+    requestFromTwitter: function() {
+      request.get({
+        url: req.headers['x-auth-service-provider'],
+        headers: {
+          'Host':'api.twitter.com',
+          'Accept':'*/*',
+          'Connection':'close',
+          'User-Agent':req.headers['user-agent'],
+          'Authorization':req.headers['x-verify-credentials-authorization']
+        }
+      }, calls.getUploaderInformation);
+    },
+    getUploaderInformation: function(err, response, body) {
+      if(!err && !!body) {
+        var bodyJSON = JSON.parse(body);
+        imageItem.uploader = {
+          'name': bodyJSON.name,
+          'screen_name': bodyJSON.screen_name,
+          'id': bodyJSON.id
+        };
+      }
+      calls.getInstanceStatus();
+    },
     getInstanceStatus: function() {
       if (!!req.files.media) statuses.findOne({'instanceName': 'figuro'}, calls.setImageIndex);
       else res.send(400, 'Parameter missing');
@@ -89,7 +124,10 @@ figuro.uploadImage = function (req, res) {
     }
   };
 
-  calls.getInstanceStatus();
+  if(!!req.headers['x-auth-service-provider'])
+    calls.requestFromTwitter();
+  else
+    calls.getInstanceStatus();
 };
 
 function generateIdentifier(item) {
