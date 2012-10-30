@@ -44,12 +44,16 @@ figuro.initialize = function() {
 };
 
 figuro.getUploadedImage = function(req, res) {
-  // send dummy file
-  fs.readFile(String.format('{0}/{1}/{2}', figuro.staticPath, figuro.imgDirName, "3939.jpeg"), function(err, data) {
-    if(!err) {
-      res.set('Content-Type', 'image/jpeg');
-      res.send(data);
+  images.findOne({'identifier': req.params.identifier}, function(db_err, status) {
+    if(!db_err) {
+      fs.readFile(String.format('{0}/{1}/{2}', figuro.staticPath, figuro.imgDirName, generateIdentifier(status)), function (fs_err, data) {
+        if (!fs_err) {
+          res.set('Content-Type', 'image/jpeg');
+          res.send(data);
+        }
+      });
     }
+    else res.error('404', 'identifier is not defined');
   });
 };
 
@@ -64,16 +68,15 @@ figuro.uploadImage = function (req, res) {
         'extension': req.files.media.name.split('.')[1],
         'filetype': req.files.media.type,
         'message': req.body.message,
-        'identifier': file_hashing
+        'identifier': file_hashing,
+        'timestamp': Date.now()
       };
       fs.rename(temp_path, String.format('{0}/{1}/{2}', figuro.staticPath, figuro.imgDirName, generateIdentifier(imageItem)));
       images.save(imageItem, function(err, result) {
-        if(!err) {
-          res.send({'url': String.format('{0}/{1}/{2}', figuro.host, figuro.imgDirName, generateIdentifier(imageItem))});
-        }
-        else {
+        if(!err)
+          res.send({'url': String.format('{0}/{1}', figuro.host, generateIdentifier(imageItem))});
+        else
           res.error('500', 'Internal server error');
-        }
       });
     })
   }
@@ -83,11 +86,14 @@ figuro.uploadImage = function (req, res) {
 };
 
 function generateIdentifier(item) {
-  return String.format('{0}.{1}', item.identifier, item.extension);
+  return String.format('{0}_{1}.{2}', item.timestamp, item.identifier, item.extension);
 }
 
-function generateHashValue(str) {
-
+function generateHashValue(integerValue) {
+  if((typeof integerValue) == "number")
+    return integerValue.toString(16);
+  else
+    return null;
 }
 
 module.exports = figuro;
