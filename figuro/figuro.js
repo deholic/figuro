@@ -58,31 +58,39 @@ figuro.getUploadedImage = function(req, res) {
 };
 
 figuro.uploadImage = function (req, res) {
-  console.log(req);
-  if (!!req.files.media) {
-    var md5 = crypto.createHash('md5');
-    statuses.findOne({'instanceName': 'figuro'}, function(err, status) {
-      var temp_path = req.files.media.path;
-      var file_hashing = md5.update(String.format("{0}", status.count + Date.now())).digest('hex');
-      var imageItem = {
-        'extension': req.files.media.name.split('.')[1],
-        'filetype': req.files.media.type,
-        'message': req.body.message,
-        'identifier': file_hashing,
-        'timestamp': Date.now()
-      };
+
+  var temp_path = req.files.media.path;
+  var imageItem = {
+    'extension': req.files.media.name.split('.')[1],
+    'filetype': req.files.media.type,
+    'message': req.body.message,
+    'timestamp': Date.now()
+  };
+
+  var calls = {
+    getInstanceStatus: function() {
+      if (!!req.files.media) statuses.findOne({'instanceName': 'figuro'}, calls.setImageIndex);
+      else res.error('400', 'Parameter missing');
+    },
+    setImageIndex: function(err, status) {
+      statuses.findAndModify({
+        query: { 'instanceName': 'figuro' },
+        update: { $inc: {'count': 1} }
+      }, calls.storeImage);
+    },
+    storeImage: function(err, result) {
+      imageItem.identifier = generateHashValue(result.count);
       fs.rename(temp_path, String.format('{0}/{1}/{2}', figuro.staticPath, figuro.imgDirName, generateIdentifier(imageItem)));
-      images.save(imageItem, function(err, result) {
-        if(!err)
-          res.send({'url': String.format('{0}/{1}', figuro.host, generateIdentifier(imageItem))});
-        else
-          res.error('500', 'Internal server error');
-      });
-    })
-  }
-  else {
-    res.error('400', 'Parameter missing');
-  }
+      images.save(imageItem, calls.sendResponse);
+    },
+    sendResponse: function(err, result) {
+      console.log(result);
+      if(!err) res.send({'url': String.format('{0}/{1}', figuro.host, result.identifier)});
+      else res.error('500', 'Internal server error');
+    }
+  };
+
+  calls.getInstanceStatus();
 };
 
 function generateIdentifier(item) {
