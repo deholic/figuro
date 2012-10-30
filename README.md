@@ -11,7 +11,7 @@ Simple image hosting for twitter client
 
 ### Server
 
-```
+```bash
 $ git clone git@github.com:deholic/figuro.git figuro
 $ cd figuro
 $ npm install
