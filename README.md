@@ -9,7 +9,7 @@ Simple image hosting for twitter client
 
 ## Usage
 
-- Server
+### Server
 
 ```
 > git clone git@github.com:deholic/figuro.git figuro
@@ -18,7 +18,7 @@ Simple image hosting for twitter client
 > node app.js /or/ forever app.js
 ```
 
-- Client
+### Client
 
 Set your custom image upload API Endpoint in your twitter client.
 http://[YOUR_SERVER_HOST]/upload
