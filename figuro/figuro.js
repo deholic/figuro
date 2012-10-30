@@ -45,20 +45,19 @@ figuro.initialize = function() {
 
 figuro.getUploadedImage = function(req, res) {
   images.findOne({'identifier': req.params.identifier}, function(db_err, status) {
-    if(!db_err) {
+    if(!db_err && !status) {
       fs.readFile(String.format('{0}/{1}/{2}', figuro.staticPath, figuro.imgDirName, generateIdentifier(status)), function (fs_err, data) {
         if (!fs_err) {
-          res.set('Content-Type', 'image/jpeg');
+          res.set('Content-Type', status.filetype);
           res.send(data);
         }
       });
     }
-    else res.error('404', 'identifier is not defined');
+    else res.send(404, 'identifier is not defined');
   });
 };
 
 figuro.uploadImage = function (req, res) {
-
   var temp_path = req.files.media.path;
   var imageItem = {
     'extension': req.files.media.name.split('.')[1],
@@ -70,7 +69,7 @@ figuro.uploadImage = function (req, res) {
   var calls = {
     getInstanceStatus: function() {
       if (!!req.files.media) statuses.findOne({'instanceName': 'figuro'}, calls.setImageIndex);
-      else res.error('400', 'Parameter missing');
+      else res.send(400, 'Parameter missing');
     },
     setImageIndex: function(err, status) {
       statuses.findAndModify({
@@ -86,7 +85,7 @@ figuro.uploadImage = function (req, res) {
     sendResponse: function(err, result) {
       console.log(result);
       if(!err) res.send({'url': String.format('{0}/{1}', figuro.host, result.identifier)});
-      else res.error('500', 'Internal server error');
+      else res.send(500, 'Internal server error');
     }
   };
 
