@@ -22,7 +22,7 @@ var images = db.collection('images'),
   statuses = db.collection('status');
 
 _.extend(figuro, {
-  "host": "http://depot.so",
+  "host": "http://localhost:3000",
   "staticPath": "./static/",
   "imgDirName": "img"
 });
@@ -47,6 +47,16 @@ figuro.initialize = function() {
   });
 };
 
+figuro.getImagePage = function(req, res) {
+  images.findOne({'identifier': req.params.identifier}, function(db_err, status) {
+    if(!db_err && !!status) {
+      status.filepath = generateStaticFileName(status);
+      console.log(status);
+      res.render('image_viewer', status);
+    }
+  });
+};
+
 figuro.getUploadedImage = function(req, res) {
   images.findOne({'identifier': req.params.identifier}, function(db_err, status) {
     if(!db_err && !!status) {
@@ -62,8 +72,6 @@ figuro.getUploadedImage = function(req, res) {
 };
 
 figuro.uploadImage = function (req, res) {
-
-  console.log(req.headers);
 
   if(!req.body || !req.files.media) {
     res.send(400, 'Parameter missing');
@@ -140,5 +148,10 @@ function generateHashValue(integerValue) {
   else
     return null;
 }
+
+var generateStaticFileName = function(status) {
+  if(!status) return null;
+  else return String.format('{0}/img/{1}', figuro.host, generateIdentifier(status));
+};
 
 module.exports = figuro;

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DePot</title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel='stylesheet' href='/bootstrap/css/bootstrap.css' />
+</head>
+<body>
+  <div class="container">
+    <div class="navbar" id="topBar">
+      <div class="navbar-inner">
+        <a class="brand" href="#">DePot</a>
+        <p class="navbar-text pull-left">Just store your photos!</p>
+      </div>
+    </div>
+    <div class="row-fluid">
+      <div class="span3">
+        <div class="uploaderInformation">
+          <legend>Uploader</legend>
+          <% if(uploader) { %>
+          <p class="lead"><%= uploader.name %> <span class="small">@<a href="http://twitter.com/<%= uploader.screen_name %>"><%= uploader.screen_name %></a></span></p>
+          <% } else { %>
+          <p>Anonymous user</p>
+          <% } %>
+        </div>
+        <div class="imageInformation">
+          <legend>Image</legend>
+          <p></p>
+        </div>
+      </div>
+      <div class="span9">
+        <legend>Image</legend>
+        <div class="centered">
+          <img class="smallImg" src="<%= filepath %>" />
+        </div>
+        <% if (message) { %>
+        <p class="messageForImage lead"><%= message %></p>
+        <% } else { %>
+        <p class="messageForImage lead">No message</p>
+        <% }%>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

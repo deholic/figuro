@@ -1,5 +1,23 @@
+div#topBar {
+    margin-top: 25px;
+}
+
+img.smallImg {
+  width: 500px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  background-color: #ddd;
+}
+
+div.centered {
+    text-align: center;
+}
+
+p.messageForImage {
+    margin-top: 10px;
+}
+
 body {
-  padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
