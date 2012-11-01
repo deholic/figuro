@@ -10,6 +10,7 @@
     "ejs": "*",
     "mongolian": "*",
     "underscore": "*",
-    "request": "*"
+    "request": "*",
+    "imagemagick": "*"
   }
 }

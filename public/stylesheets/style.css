@@ -2,8 +2,7 @@ div#topBar {
     margin-top: 25px;
 }
 
-img.smallImg {
-  width: 500px;
+img.borderImg {
   padding: 5px;
   border: 1px solid #ccc;
   background-color: #ddd;
@@ -11,6 +10,10 @@ img.smallImg {
 
 div.centered {
     text-align: center;
+}
+
+div.imageSection > img {
+    margin-bottom: 15px;
 }
 
 p.messageForImage {

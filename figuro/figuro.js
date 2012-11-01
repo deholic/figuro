@@ -11,7 +11,8 @@ var figuro = figuro || {};
 var _ = require('underscore')
   , fs = require('fs')
   , mongolian = require('mongolian')
-  , request = require('request');
+  , request = require('request')
+  , im = require('imagemagick');
 
 // mongodb server objects
 var server = new mongolian,
@@ -73,6 +74,8 @@ figuro.getUploadedImage = function(req, res) {
 
 figuro.uploadImage = function (req, res) {
 
+  console.log(req.files.media);
+
   if(!req.body || !req.files.media) {
     res.send(400, 'Parameter missing');
     return;
@@ -100,14 +103,7 @@ figuro.uploadImage = function (req, res) {
       }, calls.getUploaderInformation);
     },
     getUploaderInformation: function(err, response, body) {
-      if(!err && !!body) {
-        var bodyJSON = JSON.parse(body);
-        imageItem.uploader = {
-          'name': bodyJSON.name,
-          'screen_name': bodyJSON.screen_name,
-          'id': bodyJSON.id
-        };
-      }
+      if(!err && !!body) imageItem.uploader = JSON.parse(body);
       calls.getInstanceStatus();
     },
     getInstanceStatus: function() {
@@ -118,12 +114,18 @@ figuro.uploadImage = function (req, res) {
       statuses.findAndModify({
         query: { 'instanceName': 'figuro' },
         update: { $inc: {'count': 1} }
-      }, calls.storeImage);
+      }, function(err, result) {
+        imageItem.identifier = generateHashValue(result.count);
+        var staticFileName = String.format('{0}/{1}/{2}', figuro.staticPath, figuro.imgDirName, generateIdentifier(imageItem));
+        fs.rename(temp_path, staticFileName);
+        calls.getImageExif(staticFileName);
+      });
     },
-    storeImage: function(err, result) {
-      imageItem.identifier = generateHashValue(result.count);
-      fs.rename(temp_path, String.format('{0}/{1}/{2}', figuro.staticPath, figuro.imgDirName, generateIdentifier(imageItem)));
-      images.save(imageItem, calls.sendResponse);
+    getImageExif: function(fileName) {
+      im.identify(fileName, function(err, metadata) {
+        imageItem.metadata = metadata;
+        images.save(imageItem, calls.sendResponse);
+      });
     },
     sendResponse: function(err, result) {
       console.log(result);

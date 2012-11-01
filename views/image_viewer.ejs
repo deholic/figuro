@@ -18,26 +18,45 @@
         <div class="uploaderInformation">
           <legend>Uploader</legend>
           <% if(uploader) { %>
-          <p class="lead"><%= uploader.name %> <span class="small">@<a href="http://twitter.com/<%= uploader.screen_name %>"><%= uploader.screen_name %></a></span></p>
+          <p>
+            <img class="span12" src="https://api.twitter.com/1/users/profile_image?screen_name=<%= uploader.screen_name %>&size=original" />
+            <span class="lead"><%= uploader.name %></span><br>
+            <span class="small">@<a href="http://twitter.com/<%= uploader.screen_name %>"><%= uploader.screen_name %></a></span>
+          </p>
+
           <% } else { %>
           <p>Anonymous user</p>
           <% } %>
         </div>
         <div class="imageInformation">
           <legend>Image</legend>
-          <p></p>
+          <p>
+            <span class="lead">Resolution</span><br>
+            <span class="small"><%= metadata.width + 'x' + metadata.height %></span>
+          </p>
+          <p>
+            <span class="lead">Image Format</span><br>
+            <span class="small"><%= metadata.format %></span>
+          </p>
+          <p>
+            <span class="lead">Size</span><br>
+            <span class="small"><%= metadata.filesize %></span>
+          </p>
         </div>
       </div>
       <div class="span9">
         <legend>Image</legend>
         <div class="centered">
-          <img class="smallImg" src="<%= filepath %>" />
+          <img class="span12 borderImg" src="<%= filepath %>" />
         </div>
-        <% if (message) { %>
-        <p class="messageForImage lead"><%= message %></p>
-        <% } else { %>
-        <p class="messageForImage lead">No message</p>
-        <% }%>
+        <p class="messageForImage">
+          <% if (message) { %>
+          <span class="lead"><%= message %></span>
+          <% } else { %>
+          <span class="lead">No message</span>
+          <% }%>
+          <br><span class="small"><%= (new Date(timestamp)).toLocaleDateString() %></span>
+        </p>
       </div>
     </div>
   </div>
