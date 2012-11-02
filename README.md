@@ -11,12 +11,17 @@ Simple image hosting for twitter client
 
 ### Server
 
+#### Install
 ```bash
 $ git clone git@github.com:deholic/figuro.git figuro
 $ cd figuro
 $ npm install
 $ node app.js /or/ forever app.js
 ```
+
+#### Setting
+1. Open ./figuro/figuro.js
+2. Modify to your hostname in 26 line
 
 ### Client
 
