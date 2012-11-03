@@ -52,7 +52,8 @@ figuro.getImagePage = function(req, res) {
   images.findOne({'identifier': req.params.identifier}, function(db_err, status) {
     if(!db_err && !!status) {
       status.filepath = generateStaticFileName(status);
-      console.log(status);
+      if(!status.uploader) status.uploader = false;
+      if(!status.metadata) status.metadata = false;
       res.render('image_viewer', status);
     }
   });
@@ -73,8 +74,6 @@ figuro.getUploadedImage = function(req, res) {
 };
 
 figuro.uploadImage = function (req, res) {
-
-  console.log(req.files.media);
 
   if(!req.body || !req.files.media) {
     res.send(400, 'Parameter missing');
@@ -123,12 +122,12 @@ figuro.uploadImage = function (req, res) {
     },
     getImageExif: function(fileName) {
       im.identify(fileName, function(err, metadata) {
-        imageItem.metadata = metadata;
+        if(metadata) imageItem.metadata = metadata;
+        else imageItem.metadata = false;
         images.save(imageItem, calls.sendResponse);
       });
     },
     sendResponse: function(err, result) {
-      console.log(result);
       if(!err) res.send({'url': String.format('{0}/{1}', figuro.host, result.identifier)});
       else res.send(500, 'Internal server error');
     }
@@ -136,8 +135,10 @@ figuro.uploadImage = function (req, res) {
 
   if(!!req.headers['x-auth-service-provider'])
     calls.requestFromTwitter();
-  else
+  else {
+    imageItem.uploader = false;
     calls.getInstanceStatus();
+  }
 };
 
 function generateIdentifier(item) {
