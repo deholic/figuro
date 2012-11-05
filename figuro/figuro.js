@@ -12,7 +12,13 @@ var _ = require('underscore')
   , fs = require('fs')
   , mongolian = require('mongolian')
   , request = require('request')
-  , im = require('imagemagick');
+  , im = require('imagemagick')
+  , oauth = require('oauth').OAuth;
+
+var __oaInfo = {
+  "consumerKey": "qJITTf0NVqWJQTnpDfQvw",
+  "consumerSecret": "kDN5mQA9wEumo52rjfYRnIEUOJ7h7ooIHHvMzskrNA"
+};
 
 // mongodb server objects
 var server = new mongolian,
@@ -23,7 +29,9 @@ var images = db.collection('images'),
   statuses = db.collection('status');
 
 _.extend(figuro, {
-  "host": "http://localhost:3000",
+  "siteName": "(De)Pot",
+  "siteDescription": "Just store your photos!",
+  "host": "http://depot.so",
   "staticPath": "./static/",
   "imgDirName": "img"
 });
@@ -52,9 +60,12 @@ figuro.getImagePage = function(req, res) {
   images.findOne({'identifier': req.params.identifier}, function(db_err, status) {
     if(!db_err && !!status) {
       status.filepath = generateStaticFileName(status);
+      status.siteName = figuro.siteName;
+      status.siteDescription = figuro.siteDescription;
       console.log(status);
       res.render('image_viewer', status);
     }
+    else res.send(404, 'identifier is not defined');
   });
 };
 

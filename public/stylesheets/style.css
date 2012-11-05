@@ -5,6 +5,7 @@ div#topBar {
 img.borderImg {
   padding: 5px;
   border: 1px solid #ccc;
+  margin-bottom: 15px;
   background-color: #ddd;
 }
 

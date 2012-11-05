@@ -12,6 +12,9 @@ Simple image hosting for twitter client
 ### Server
 
 #### Install
+
+This project require imagemagick.
+
 ```bash
 $ git clone git@github.com:deholic/figuro.git figuro
 $ cd figuro

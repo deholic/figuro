@@ -9,8 +9,8 @@
   <div class="container">
     <div class="navbar" id="topBar">
       <div class="navbar-inner">
-        <a class="brand" href="#">DePot</a>
-        <p class="navbar-text pull-left">Just store your photos!</p>
+        <a class="brand" href="#"><%= siteName %></a>
+        <p class="navbar-text pull-left"><%= siteDescription %></p>
       </div>
     </div>
     <div class="row-fluid">
@@ -28,7 +28,7 @@
           <% } %>
         </div>
         <div class="imageInformation">
-          <legend>Information</legend>
+          <legend>Image</legend>
           <p>
             <span class="lead">Resolution</span><br>
             <span class="small"><%= metadata.width + 'x' + metadata.height %></span>
@@ -43,8 +43,8 @@
           </p>
         </div>
       </div>
-      <div class="span9">
-        <legend>Image</legend>
+      <div class="span9 imageSection">
+        <legend>Information</legend>
         <div class="centered">
           <img class="span12 borderImg" src="<%= filepath %>" />
         </div>
