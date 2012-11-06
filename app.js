@@ -20,6 +20,8 @@ app.configure(function(){
   app.use(express.logger('dev'));
   app.use(express.bodyParser());
   app.use(express.methodOverride());
+  app.use(express.cookieParser('figuro_zero'));
+  app.use(express.session());
   app.use(app.router);
   app.use(express.static(path.join(__dirname, 'public')));
   app.use(express.static(path.join(__dirname, 'static')));
@@ -34,6 +36,8 @@ app.get('/:identifier', figuro.getImagePage);
 //app.get('/:identifier', figuro.getUploadedImage);
 app.get('/image/:identifier', figuro.getUploadedImage);
 app.post('/upload', figuro.uploadImage);
+app.get('/oauth/process', figuro.signWithTwitter);
+app.get('/oauth/callback', figuro.processOAuth);
 
 http.createServer(app).listen(app.get('port'), function(){
   figuro.initialize();

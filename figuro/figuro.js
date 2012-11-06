@@ -1,3 +1,4 @@
+
 /**
  * Created with JetBrains WebStorm.
  * User: dehol
@@ -15,9 +16,41 @@ var _ = require('underscore')
   , im = require('imagemagick')
   , oauth = require('oauth').OAuth;
 
-var __oaInfo = {
-  "consumerKey": "qJITTf0NVqWJQTnpDfQvw",
-  "consumerSecret": "kDN5mQA9wEumo52rjfYRnIEUOJ7h7ooIHHvMzskrNA"
+/**
+ * OAuth consumer information
+ * @type {Object}
+ * @private
+ */
+var oAuth = {
+  "env": {
+    "product": {
+      "consumer_key":"qJITTf0NVqWJQTnpDfQvw",
+      "consumer_secret":"kDN5mQA9wEumo52rjfYRnIEUOJ7h7ooIHHvMzskrNA"
+    },
+    "test": {
+      "consumer_key":"sSRRnLfVcT5ryx4OAifbRQ",
+      "consumer_secret":"XPOHvF5G2NBcSe6eRc6X0vMqPcYM98NZXsnA0nBA"
+    },
+    "request_token_URL":"https://api.twitter.com/oauth/request_token",
+    "access_token_URL":"https://api.twitter.com/oauth/access_token",
+    "authorize_URL":"https://api.twitter.com/oauth/authorize",
+    "oauth_version":"1.0",
+    "hash_version":"HMAC-SHA1"
+  },
+  "oAuthObject":null,
+  "generateOAuthObject":function (isProductionServer) {
+    if (!this.oAuthObject)
+      this.oAuthObject = new oauth(
+        this.env.request_token_URL,
+        this.env.access_token_URL,
+        isProductionServer ? this.env.product.consumer_key : this.env.test.consumer_key,
+        isProductionServer ? this.env.product.consumer_secret : this.env.test.consumer_secret,
+        this.env.oauth_version,
+        null,
+        this.env.hash_version
+      );
+    return this.oAuthObject;
+  }
 };
 
 // mongodb server objects
@@ -31,7 +64,7 @@ var images = db.collection('images'),
 _.extend(figuro, {
   "siteName": "(De)Pot",
   "siteDescription": "Just store your photos!",
-  "host": "http://depot.so",
+  "host": "http://localhost:3000",
   "staticPath": "./static/",
   "imgDirName": "img"
 });
@@ -46,6 +79,9 @@ String.format = function() {
   return string;
 };
 
+/**
+ * Initialize application
+ */
 figuro.initialize = function() {
   if(!fs.existsSync(figuro.staticPath)) {
     fs.mkdirSync(figuro.staticPath);
@@ -56,6 +92,11 @@ figuro.initialize = function() {
   });
 };
 
+/**
+ * Send image viewer page
+ * @param req
+ * @param res
+ */
 figuro.getImagePage = function(req, res) {
   images.findOne({'identifier': req.params.identifier}, function(db_err, status) {
     if(!db_err && !!status) {
@@ -69,6 +110,11 @@ figuro.getImagePage = function(req, res) {
   });
 };
 
+/**
+ * Send original image
+ * @param req
+ * @param res
+ */
 figuro.getUploadedImage = function(req, res) {
   images.findOne({'identifier': req.params.identifier}, function(db_err, status) {
     if(!db_err && !!status) {
@@ -83,9 +129,12 @@ figuro.getUploadedImage = function(req, res) {
   });
 };
 
+/**
+ * Store image from Tweetbot
+ * @param req
+ * @param res
+ */
 figuro.uploadImage = function (req, res) {
-
-  console.log(req.files.media);
 
   if(!req.body || !req.files.media) {
     res.send(400, 'Parameter missing');
@@ -149,13 +198,39 @@ figuro.uploadImage = function (req, res) {
     calls.requestFromTwitter();
   else
     calls.getInstanceStatus();
+
 };
 
-function generateIdentifier(item) {
+/**
+ * Redirect user to twitter OAuth page
+ * @param req
+ * @param res
+ */
+figuro.signWithTwitter = function (req, res) {
+  var oa = oAuth.generateOAuthObject(false);
+  oa.getOAuthRequestToken(function(err, oauth_token, oauth_token_secret, results) {
+    if(err) {
+      console.log(err);
+      res.send(500, "err");
+    } else {
+      console.log(oauth_token, oauth_token_secret, results);
+      req.session.oauth_request_token = oauth_token;
+      req.session.oauth_request_secret = oauth_token_secret;
+      res.redirect(oAuth.env.authorize_URL + '?oauth_token=' + oauth_token);
+    }
+  });
+};
+
+figuro.processOAuth = function(req, res) {
+  // TODO: OAuth processing
+  res.send(req.query);
+};
+
+var generateIdentifier = function(item) {
   return String.format('{0}_{1}.{2}', item.timestamp, item.identifier, item.extension);
 }
 
-function generateHashValue(integerValue) {
+var generateHashValue = function(integerValue) {
   if((typeof integerValue) == "number")
     return integerValue.toString(16);
   else
