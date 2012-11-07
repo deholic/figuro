@@ -213,7 +213,6 @@ figuro.signWithTwitter = function (req, res) {
       console.log(err);
       res.send(500, "err");
     } else {
-      console.log(oauth_token, oauth_token_secret, results);
       req.session.oauth_request_token = oauth_token;
       req.session.oauth_request_secret = oauth_token_secret;
       res.redirect(oAuth.env.authorize_URL + '?oauth_token=' + oauth_token);
@@ -222,8 +221,34 @@ figuro.signWithTwitter = function (req, res) {
 };
 
 figuro.processOAuth = function(req, res) {
-  // TODO: OAuth processing
-  res.send(req.query);
+  var oa = oAuth.generateOAuthObject(false);
+  var proc = {
+    getAccessToken: function(err, access_token, access_token_secret, results) {
+      if(!err) {
+        req.session.oauth_access_token = access_token;
+        req.session.oauth_access_token_secret = access_token_secret;
+        oa.get(
+          "https://api.twitter.com/1.1/account/verify_credentials.json",
+          req.session.oauth_access_token,
+          req.session.oauth_access_token_secret,
+          proc.getUserData
+        );
+      }
+      else res.send(500, results);
+    },
+    getUserData: function(err, data, response) {
+      if(!err) {
+        // TODO: User data handling
+      }
+    }
+  };
+
+  oa.getOAuthAccessToken(
+    req.session.oauth_request_token,
+    req.session.oauth_request_secret,
+    req.param.oauth_verifier,
+    proc.getAccessToken
+  );
 };
 
 var generateIdentifier = function(item) {
