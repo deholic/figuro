@@ -58,8 +58,9 @@ var server = new mongolian,
   db = server.db('figuro');
 
 // mongodb collection objects
-var images = db.collection('images'),
-  statuses = db.collection('status');
+var Images = db.collection('Images')
+  , Statuses = db.collection('status')
+  , Users = db.collection('user');
 
 _.extend(figuro, {
   "siteName": "(De)Pot",
@@ -87,8 +88,8 @@ figuro.initialize = function() {
     fs.mkdirSync(figuro.staticPath);
     fs.mkdirSync(String.format("{0}{1}", figuro.staticPath, figuro.imgDirName));
   }
-  statuses.findOne({'instanceName': 'figuro'}, function(err, status) {
-    if(!status) statuses.insert({'instanceName': 'figuro', 'count': 0});
+  Statuses.findOne({'instanceName': 'figuro'}, function(err, status) {
+    if(!status) Statuses.insert({'instanceName': 'figuro', 'count': 0});
   });
 };
 
@@ -98,7 +99,7 @@ figuro.initialize = function() {
  * @param res
  */
 figuro.getImagePage = function(req, res) {
-  images.findOne({'identifier': req.params.identifier}, function(db_err, status) {
+  Images.findOne({'identifier': req.params.identifier}, function(db_err, status) {
     if(!db_err && !!status) {
       status.filepath = generateStaticFileName(status);
       status.siteName = figuro.siteName;
@@ -116,7 +117,7 @@ figuro.getImagePage = function(req, res) {
  * @param res
  */
 figuro.getUploadedImage = function(req, res) {
-  images.findOne({'identifier': req.params.identifier}, function(db_err, status) {
+  Images.findOne({'identifier': req.params.identifier}, function(db_err, status) {
     if(!db_err && !!status) {
       fs.readFile(String.format('{0}/{1}/{2}', figuro.staticPath, figuro.imgDirName, generateIdentifier(status)), function (fs_err, data) {
         if (!fs_err) {
@@ -167,11 +168,11 @@ figuro.uploadImage = function (req, res) {
       calls.getInstanceStatus();
     },
     getInstanceStatus: function() {
-      if (!!req.files.media) statuses.findOne({'instanceName': 'figuro'}, calls.setImageIndex);
+      if (!!req.files.media) Statuses.findOne({'instanceName': 'figuro'}, calls.setImageIndex);
       else res.send(400, 'Parameter missing');
     },
     setImageIndex: function(err, status) {
-      statuses.findAndModify({
+      Statuses.findAndModify({
         query: { 'instanceName': 'figuro' },
         update: { $inc: {'count': 1} }
       }, function(err, result) {
@@ -184,7 +185,7 @@ figuro.uploadImage = function (req, res) {
     getImageExif: function(fileName) {
       im.identify(fileName, function(err, metadata) {
         imageItem.metadata = metadata;
-        images.save(imageItem, calls.sendResponse);
+        Images.save(imageItem, calls.sendResponse);
       });
     },
     sendResponse: function(err, result) {
@@ -239,6 +240,25 @@ figuro.processOAuth = function(req, res) {
     getUserData: function(err, data, response) {
       if(!err) {
         // TODO: User data handling
+        var parsed = JSON.parse(data);
+        var beStored = {
+          "id": parsed.id,
+          "access_token": req.session.oauth_access_token,
+          "access_token_secret": req.session.oauth_access_token_secret
+        };
+
+        Users.findOne({"id": parsed.id}, function(err, result) {
+          if(!err && !result) {
+            Users.save(beStored, function(err){
+              if(!err) res.redirect('/');
+            });
+          }
+          else {
+            req.session.twitter_id = result.id;
+            res.redirect('/');
+          }
+        });
+
       }
     }
   };

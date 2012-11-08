@@ -31,7 +31,7 @@ app.configure('development', function(){
   app.use(express.errorHandler());
 });
 
-//app.get('/', routes.index);
+app.get('/', routes.index);
 app.get('/:identifier', figuro.getImagePage);
 //app.get('/:identifier', figuro.getUploadedImage);
 app.get('/image/:identifier', figuro.getUploadedImage);
