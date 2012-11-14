@@ -203,6 +203,22 @@ figuro.uploadImage = function (req, res) {
 };
 
 /**
+ *
+ * @param req
+ * @param res
+ */
+figuro.deleteImage = function (req, res) {
+  if(!!req.params.identifier) {
+    Images.remove({"id": req.params.identifier}, function(err, status) {
+      if(!err) res.send({ "status": "ok" });
+    });
+  }
+  else {
+    res.send(404, "identifier is not found");
+  }
+};
+
+/**
  * Redirect user to twitter OAuth page
  * @param req
  * @param res

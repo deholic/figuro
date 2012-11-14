@@ -34,8 +34,9 @@ app.configure('development', function(){
 app.get('/', routes.index);
 app.get('/:identifier', figuro.getImagePage);
 //app.get('/:identifier', figuro.getUploadedImage);
-app.get('/image/:identifier', figuro.getUploadedImage);
-app.post('/upload', figuro.uploadImage);
+app.get('/api/image/:identifier', figuro.getUploadedImage);
+app.get('/api/image/delete/:identifier', figuro.deleteImage);
+app.post('/api/image/upload', figuro.uploadImage);
 app.get('/oauth/process', figuro.signWithTwitter);
 app.get('/oauth/callback', figuro.processOAuth);
 
